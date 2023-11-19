@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Logs Analysis</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo">
+          </div>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+
+    <div class="container">
+  <h1>Data Logs Analysis</h1>
+  
+  <label for="fileInput">Choose a file:</label>
+  <input type="file" id="fileInput" accept=".txt, .xml, .sql" />
+  <button onclick="handleFile()">Upload File</button>
+
+  <div>
+    <label for="groupingCriteria">Select Grouping Criteria:</label>
+    <select id="groupingCriteria" onchange="updateGroupingCriteria()">
+      <option value="none">None</option>
+      <option value="Level">Error Type</option>
+      <option value="MachineName">Machine Name</option>
+      <option value="Logger">Logger</option>
+      <option value="Callsite">Callsite</option>
+      <!-- Add more options based on available criteria in your logs -->
+    </select>
+  </div>
+</div>
+  <div id="statisticsTable" style="display: none;">
+    <h2>Statistics:</h2>
+    <table id="statsTable" border="1">
+      <!-- Table content will be generated dynamically based on grouping -->
+    </table>
+  </div>
+
+  <script>
+    let selectedCriteria = 'none'; // Default selected grouping criteria
+
+    // Replace this function with your method to fetch SQL log data from the server
+    function fetchSQLLogData() {
+      // Simulated log entries (Replace this with actual SQL log data)
+      const logData = [
+        { Id: 39, MachineName: '15', UserName: 'E1', Date: '2021-02-04T11:01:22.843', Level: 'Info', Logger: 'Infrastructure.Services.TextLogger', Callsite: 'Infrastructure.Services.TextLogger.Info', Message: 'Błąd łączenia z komunikatorem. (Unauthorized)', Exception: '' },
+        // Add more log entries based on your SQL log structure
+      ];
+
+      return Promise.resolve(logData);
+    }
+
+    function processDataFromSQLLogs(logData) {
+      const logEntries = logData.map(entry => ({
+        Level: entry.Level,
+        MachineName: entry.MachineName,
+        Logger: entry.Logger,
+        Callsite: entry.Callsite,
+        // Add more properties if needed based on your SQL log structure
+      }));
+
+      displayStatistics(logEntries);
+    }
+
+    function handleFile() {
+      fetchSQLLogData()
+        .then(logData => {
+          if (logData) {
+            processDataFromSQLLogs(logData);
+          }
+        });
+    }
+
+    function updateGroupingCriteria() {
+      const selectElement = document.getElementById('groupingCriteria');
+      selectedCriteria = selectElement.value;
+      handleFile(); // Re-process data when grouping criteria changes
+    }
+
+    function groupByCriteria(logEntries, criteria) {
+      const groupedData = new Map();
+
+      logEntries.forEach((entry) => {
+        const groupKey = entry[criteria];
+        if (!groupedData.has(groupKey)) {
+          groupedData.set(groupKey, 1);
+        } else {
+          groupedData.set(groupKey, groupedData.get(groupKey) + 1);
+        }
+      });
+
+      return groupedData;
+    }
+
+    function displayStatistics(logEntries) {
+      const groupedData = groupByCriteria(logEntries, selectedCriteria);
+
+      const statsTable = document.getElementById('statsTable');
+      statsTable.innerHTML = '';
+      
+      statsTable.innerHTML += `<tr><th>${selectedCriteria}</th><th>Occurrences</th></tr>`;
+
+      groupedData.forEach((count, group) => {
+        statsTable.innerHTML += `<tr><td>${group}</td><td>${count}</td></tr>`;
+      });
+
+      const statisticsTable = document.getElementById('statisticsTable');
+      statisticsTable.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
